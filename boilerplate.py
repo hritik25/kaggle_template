@@ -53,8 +53,39 @@ def split_df_x_y(df: pd.DataFrame, target_col: str) -> Tuple[pd.DataFrame, pd.Da
     feature_cols = [col for col in cols if col != target_col]
     return df[feature_cols], df[[target_col]]
 
-"""
-1. walk through the hw2_task1 in order and see what code you wrote 
-in the notebook, and write a snippet for generic enough usage
-2. test the utility of the snippets to solve hw2_task2 and add missing functionality
-"""
+# function to summarize the dataset body at a high level (assuming well structured data)
+def summarize_data(df: pd.DataFrame) -> None:
+    print("No. of samples = ", len(df))
+    print("No. of features = ", len(df.columns))
+    cont_x, cat_x = separate_cont_cat(df)
+    print("No. of continuous features = ", len(cont_x))
+    print("No. of categorical features = ", len(cat_x))
+    df.info()
+
+# function to generate quick numbers on the cardinality of categorical variables
+def categorical_variables_stats(df: pd.DataFrame, cat: List[str]) -> pd.DataFrame:
+    n_unique =   []
+    for var in cat:
+        n_unique.append(df[var].nunique())
+    return pd.DataFrame({"name": cat, "num_unique": n_unique})
+
+# function to filter a continuous variable by interquartile range
+def filter_cont_target_by_iqr(df: pd.DataFrame, target_col: str) -> pd.DataFrame:
+    q3 = np.quantile(df[target_col], 0.75)
+    q1 = np.quantile(df[target_col], 0.25)
+    iqr = q3 - q1
+ 
+    lower_range = q1 - 1.5 * iqr
+    upper_range = q3 + 1.5 * iqr
+
+    df = df[df[target_col] > lower_range]
+    df = df[df[target_col] < upper_range]
+    return df
+
+# function to quickly plot feature distributions
+def visualize_feature_distributions_rough(df: pd.DataFrame, features: List[str]) -> None:
+    # visualize continuous features
+    for i in range(len(features)):
+        fig = plt.figure(figsize=(5, 5))
+        fig.suptitle(features[i])
+        plt.hist(df[features[i]])
