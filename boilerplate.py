@@ -1,5 +1,5 @@
 import pandas as pd
-from typing import List, Tuple
+from typing import List, Tuple, Optional
 
 # **general**
 import pandas as pd
@@ -42,9 +42,12 @@ from imblearn.pipeline import make_pipeline as make_imb_pipeline
 from sklearn.compose import TransformedTargetRegressor
 
 # function to separate continuous and categorical features
-def separate_cont_cat(df: pd.DataFrame) -> Tuple[List[str], List[str]]:
+def separate_cont_cat(df: pd.DataFrame, target_col: Optional[str]) -> Tuple[List[str], List[str]]:
     continuous_features = df.select_dtypes(include='number').columns
     categorical_features = df.select_dtypes(exclude='number').columns
+    if target_col:
+        continuous_features = [x for x in continuous_features if x!=target_col]
+        categorical_features = [x for x in categorical_features if x!=target_col]
     return continuous_features, categorical_features
 
 # function to return X, y (training features, labels)
