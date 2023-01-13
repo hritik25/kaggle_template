@@ -14,7 +14,7 @@ from sklearn.impute import KNNImputer
 # **feature engineering**
 from sklearn.preprocessing import PolynomialFeatures
 from sklearn.preprocessing import OneHotEncoder
-from sklearn.preprocessing import StandardScaler
+from sklearn.preprocessing import StandardScaler, MinMaxScaler
 from category_encoders import TargetEncoder
 
 # **cross-validation and model tuning**
