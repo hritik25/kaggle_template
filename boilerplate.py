@@ -15,7 +15,8 @@ from sklearn.impute import KNNImputer
 from sklearn.preprocessing import PolynomialFeatures
 from sklearn.preprocessing import OneHotEncoder
 from sklearn.preprocessing import StandardScaler, MinMaxScaler
-from category_encoders import TargetEncoder
+from sklearn.preprocessing import TargetEncoder
+from sentence_transformers import SentenceTransformer
 
 # **cross-validation and model tuning**
 from sklearn.model_selection import train_test_split
@@ -25,13 +26,14 @@ from sklearn.model_selection import KFold, StratifiedKFold
 from sklearn.model_selection import GridSearchCV
 from sklearn.pipeline import make_pipeline
 from sklearn.compose import make_column_transformer
-from sklearn.metrics import confusion_matrix, plot_confusion_matrix
+from sklearn.metrics import confusion_matrix, ConfusionMatrixDisplay
+from sklearn.metrics import ndcg_score
 
 # **classifiction models**
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.linear_model import LogisticRegression
 from sklearn.svm import LinearSVC
-from lightgbm.sklearn import LGBMClassifier
+import lightgbm as lgb
 from sklearn.ensemble import RandomForestClassifier
 
 # **class imbalance**
@@ -42,7 +44,7 @@ from imblearn.pipeline import make_pipeline as make_imb_pipeline
 from sklearn.compose import TransformedTargetRegressor
 
 # function to separate continuous and categorical features
-def separate_cont_cat(df: pd.DataFrame, target_col: Optional[str]) -> Tuple[List[str], List[str]]:
+def separate_cont_cat(df: pd.DataFrame, target_col: Optional[str]=None) -> Tuple[List[str], List[str]]:
     continuous_features = df.select_dtypes(include='number').columns
     categorical_features = df.select_dtypes(exclude='number').columns
     if target_col:
@@ -86,9 +88,9 @@ def filter_cont_target_by_iqr(df: pd.DataFrame, target_col: str) -> pd.DataFrame
     return df
 
 # function to quickly plot feature distributions
-def visualize_feature_distributions_rough(df: pd.DataFrame, features: List[str]) -> None:
+def continuous_feature_histograms(df: pd.DataFrame, cont_features: List[str]) -> None:
     # visualize continuous features
-    for i in range(len(features)):
+    for col in cont_features:
         fig = plt.figure(figsize=(5, 5))
-        fig.suptitle(features[i])
-        plt.hist(df[features[i]])
+        fig.suptitle(col)
+        plt.hist(df[col])
