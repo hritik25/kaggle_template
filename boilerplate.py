@@ -16,7 +16,7 @@ from sklearn.preprocessing import PolynomialFeatures
 from sklearn.preprocessing import OneHotEncoder
 from sklearn.preprocessing import StandardScaler, MinMaxScaler
 from sklearn.preprocessing import TargetEncoder
-from sentence_transformers import SentenceTransformer
+# from sentence_transformers import SentenceTransformer
 
 # **cross-validation and model tuning**
 from sklearn.model_selection import train_test_split
@@ -33,12 +33,12 @@ from sklearn.metrics import ndcg_score
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.linear_model import LogisticRegression
 from sklearn.svm import LinearSVC
-import lightgbm as lgb
+# import lightgbm as lgb
 from sklearn.ensemble import RandomForestClassifier
 
 # **class imbalance**
-from imblearn.under_sampling import RandomUnderSampler
-from imblearn.pipeline import make_pipeline as make_imb_pipeline
+# from imblearn.under_sampling import RandomUnderSampler
+# from imblearn.pipeline import make_pipeline as make_imb_pipeline
 
 # **target transformation** 
 from sklearn.compose import TransformedTargetRegressor
@@ -63,8 +63,8 @@ def summarize_data(df: pd.DataFrame) -> None:
     print("No. of samples = ", len(df))
     print("No. of features = ", len(df.columns))
     cont_x, cat_x = separate_cont_cat(df)
-    print("No. of continuous features = ", len(cont_x))
-    print("No. of categorical features = ", len(cat_x))
+    print("No. of numerical features = ", len(cont_x))
+    print("No. of non-numerical features = ", len(cat_x))
     df.info()
 
 # function to generate quick numbers on the cardinality of categorical variables
@@ -94,3 +94,84 @@ def continuous_feature_histograms(df: pd.DataFrame, cont_features: List[str]) ->
         fig = plt.figure(figsize=(5, 5))
         fig.suptitle(col)
         plt.hist(df[col])
+
+def plot_classification_distributions(df: pd.DataFrame, 
+                                    target_col: str,
+                                    cont_features: List[str],
+                                    cat_features: List[str],
+                                    figsize: Tuple[int, int]=(20, 4)) -> None:
+    """
+    Plot feature distributions for classification problems in a single figure.
+    For categorical features: nested bar plots
+    For continuous features: histograms colored by class
+    """
+    # Calculate number of rows needed
+    n_cat = len(cat_features)
+    n_cont = len(cont_features)
+    n_cols = 4  # Number of plots per row
+    n_rows = ((n_cat + n_cont - 1) // n_cols) + 1
+    
+    fig = plt.figure(figsize=(figsize[0], figsize[1] * n_rows))
+    
+    # Plot categorical features
+    for idx, feature in enumerate(cat_features, 1):
+        ax = plt.subplot(n_rows, n_cols, idx)
+        df_grouped = df.groupby(feature)[target_col].value_counts(normalize=True).unstack()
+        df_grouped.plot(kind='bar', stacked=False, ax=ax)
+        ax.set_title(f'{feature} vs {target_col}')
+        ax.set_xlabel(feature)
+        ax.set_ylabel('Proportion')
+        ax.legend(title=target_col)
+        ax.tick_params(axis='x', rotation=45)
+    
+    # Plot continuous features
+    for idx, feature in enumerate(cont_features, len(cat_features) + 1):
+        ax = plt.subplot(n_rows, n_cols, idx)
+        for target_value in df[target_col].unique():
+            mask = df[target_col] == target_value
+            ax.hist(df[mask][feature], alpha=0.5, label=str(target_value), 
+                   density=True, bins=30)
+        ax.set_title(f'{feature} Distribution')
+        ax.set_xlabel(feature)
+        ax.set_ylabel('Density')
+        ax.legend(title=target_col)
+    
+    plt.tight_layout()
+    plt.show()
+
+def plot_regression_distributions(df: pd.DataFrame,
+                                target_col: str,
+                                cont_features: List[str],
+                                cat_features: List[str],
+                                figsize: Tuple[int, int]=(20, 4)) -> None:
+    """
+    Plot feature distributions for regression problems in a single figure.
+    For categorical features: box plots
+    For continuous features: scatter plots
+    """
+    n_cat = len(cat_features)
+    n_cont = len(cont_features)
+    n_cols = 4
+    n_rows = ((n_cat + n_cont - 1) // n_cols) + 1
+    
+    fig = plt.figure(figsize=(figsize[0], figsize[1] * n_rows))
+    
+    # Plot categorical features
+    for idx, feature in enumerate(cat_features, 1):
+        ax = plt.subplot(n_rows, n_cols, idx)
+        df.boxplot(column=target_col, by=feature, ax=ax)
+        ax.set_title(f'{target_col} by {feature}')
+        ax.set_xlabel(feature)
+        ax.set_ylabel(target_col)
+        ax.tick_params(axis='x', rotation=45)
+    
+    # Plot continuous features
+    for idx, feature in enumerate(cont_features, len(cat_features) + 1):
+        ax = plt.subplot(n_rows, n_cols, idx)
+        ax.scatter(df[feature], df[target_col], alpha=0.5)
+        ax.set_title(f'{target_col} vs {feature}')
+        ax.set_xlabel(feature)
+        ax.set_ylabel(target_col)
+    
+    plt.tight_layout()
+    plt.show()
